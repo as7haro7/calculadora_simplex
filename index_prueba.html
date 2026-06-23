@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema de Optimización Símplex - PIL Andina</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        MathJax = { tex: { inlineMath: [['$', '$'], ['\\(', '\\)']] } };
+    </script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <style>
+        /* Mejoras en el scrollbar y diseño de tablas */
+        .table-container {
+            overflow-x: auto;
+            border-radius: 0.5rem;
+        }
+
+        .table-container::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .table-container::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+
+        .pivot-col {
+            background-color: #eff6ff;
+        }
+
+        /* blue-50 */
+        .pivot-row {
+            background-color: #f0fdf4;
+        }
+
+        /* green-50 */
+        .pivot-cell {
+            background-color: #fef08a !important;
+            /* yellow-200 */
+            font-weight: 800;
+            color: #b45309;
+            /* amber-700 */
+            box-shadow: inset 0 0 0 2px #f59e0b;
+            /* ring */
+        }
+
+        input[type="number"] {
+            text-align: right;
+            font-family: monospace;
+            font-size: 1.1rem;
+        }
+
+        /* Animación suave al aparecer resultados */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in-out;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+
+<body class="bg-slate-100 text-slate-800 font-sans min-h-screen pb-12 selection:bg-blue-200">
+
+    <header class="bg-gradient-to-r from-blue-900 to-blue-800 text-white p-6 shadow-lg mb-8">
+        <div class="max-w-7xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-extrabold tracking-tight">Optimización Símplex - PIL Andina S.A.</h1>
+                <p class="text-blue-200 mt-2 font-medium">Resolución Dinámica y Análisis de Sensibilidad</p>
+            </div>
+            <div class="text-right hidden md:block">
+                <p class="text-sm font-semibold tracking-wide uppercase text-blue-300">Investigación Operativa</p>
+                <p class="text-lg font-bold">Univ. Erick Poma</p>
+            </div>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 grid grid-cols-1 xl:grid-cols-12 gap-8">
+
+        <aside class="xl:col-span-4 space-y-6 xl:sticky top-6 h-fit">
+
+            <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200">
+                <div class="flex items-center gap-2 border-b border-slate-200 pb-3 mb-4">
+                    <svg class="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z">
+                        </path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path>
+                    </svg>
+                    <h2 class="text-xl font-bold text-slate-800">Parámetros del Modelo</h2>
+                </div>
+
+                <div class="mb-5">
+                    <label class="block text-sm font-semibold mb-2 text-slate-700">Seleccionar Escenario</label>
+                    <select id="preset-selector"
+                        class="w-full border-2 border-blue-100 rounded-lg p-2.5 bg-blue-50 text-blue-900 font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none transition-all"
+                        onchange="loadPreset()">
+                        <option value="base">Caso Base (Crisis El Alto 25%)</option>
+                        <option value="mejora">Simulación: Recuperación El Alto (50%)</option>
+                        <option value="demanda">Simulación: Mayor Demanda Yogur</option>
+                    </select>
+                </div>
+
+                <div class="mb-5">
+                    <h3 class="font-bold text-slate-700 mb-3 bg-slate-100 py-1 px-2 rounded">Función Objetivo (Max Z)
+                    </h3>
+                    <div class="grid grid-cols-2 gap-3" id="obj-inputs">
+                    </div>
+                </div>
+
+                <div class="mb-6">
+                    <h3 class="font-bold text-slate-700 mb-3 bg-slate-100 py-1 px-2 rounded">Capacidades y Demandas
+                        (RHS)</h3>
+                    <div class="space-y-3" id="rhs-inputs">
+                    </div>
+                </div>
+
+                <button onclick="runSimplex()"
+                    class="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 px-4 rounded-lg shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-0.5 flex justify-center items-center gap-2">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z">
+                        </path>
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    Calcular Solución Óptima
+                </button>
+            </div>
+        </aside>
+
+        <section class="xl:col-span-8 flex flex-col gap-6">
+
+            <div id="final-result-container" class="hidden"></div>
+
+            <div class="bg-white p-6 rounded-xl shadow-md border border-slate-200 min-h-[500px]">
+                <h2
+                    class="text-2xl font-bold text-slate-800 border-b border-slate-200 pb-3 mb-6 flex items-center gap-2">
+                    <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                        xmlns="http://www.w3.org/2000/svg">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                            d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z">
+                        </path>
+                    </svg>
+                    Matriz Paso a Paso
+                </h2>
+
+                <div id="solution-container" class="space-y-10">
+                    <div class="flex flex-col items-center justify-center h-64 text-slate-400">
+                        <svg class="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24"
+                            xmlns="http://www.w3.org/2000/svg">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2"
+                                d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4m0 5c0 2.21-3.582 4-8 4s-8-1.79-8-4">
+                            </path>
+                        </svg>
+                        <p class="text-lg font-medium">Esperando parámetros...</p>
+                        <p class="text-sm">Presiona "Calcular Solución Óptima" para iniciar el motor Símplex.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        const cases = {
+            base: {
+                obj: [850, 1200, 920, 1350, 880, 1280],
+                rhs: [400, 1000, 600, 1500, 900, 400],
+                labels: ["x₁ (Leche El Alto)", "x₂ (Yogur El Alto)", "x₃ (Leche Cbba)", "x₄ (Yogur Cbba)", "x₅ (Leche Sta. Cruz)", "x₆ (Yogur Sta. Cruz)"]
+            },
+            mejora: {
+                obj: [850, 1200, 920, 1350, 880, 1280],
+                rhs: [800, 1000, 600, 1500, 900, 400],
+                labels: ["x₁ (Leche El Alto)", "x₂ (Yogur El Alto)", "x₃ (Leche Cbba)", "x₄ (Yogur Cbba)", "x₅ (Leche Sta. Cruz)", "x₆ (Yogur Sta. Cruz)"]
+            },
+            demanda: {
+                obj: [850, 1200, 920, 1350, 880, 1280],
+                rhs: [400, 1000, 600, 1500, 900, 800],
+                labels: ["x₁ (Leche El Alto)", "x₂ (Yogur El Alto)", "x₃ (Leche Cbba)", "x₄ (Yogur Cbba)", "x₅ (Leche Sta. Cruz)", "x₆ (Yogur Sta. Cruz)"]
+            }
+        };
+
+        const constraintMatrix = [
+            { coeffs: [1, 1, 0, 0, 0, 0], type: '<=', name: 'Cap. El Alto' },
+            { coeffs: [0, 0, 1, 1, 0, 0], type: '<=', name: 'Cap. Cochabamba' },
+            { coeffs: [0, 0, 0, 0, 1, 1], type: '<=', name: 'Cap. Santa Cruz' },
+            { coeffs: [1, 0, 1, 0, 1, 0], type: '<=', name: 'Disp. Leche Cruda' },
+            { coeffs: [1, 0, 1, 0, 1, 0], type: '>=', name: 'Demanda Leche LP' },
+            { coeffs: [0, 1, 0, 1, 0, 1], type: '>=', name: 'Demanda Yogur' }
+        ];
+
+        function loadPreset() {
+            const presetId = document.getElementById('preset-selector').value;
+            const data = cases[presetId];
+
+            const objHtml = data.obj.map((val, i) => `
+                <div class="flex flex-col bg-slate-50 p-2 rounded border border-slate-200">
+                    <span class="text-xs font-semibold text-slate-500 mb-1">${data.labels[i]}</span>
+                    <div class="flex items-center">
+                        <span class="text-slate-400 mr-2">$</span>
+                        <input type="number" id="obj-${i}" value="${val}" class="w-full bg-transparent outline-none text-slate-800 font-semibold">
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('obj-inputs').innerHTML = objHtml;
+
+            const rhsHtml = data.rhs.map((val, i) => `
+                <div class="flex justify-between items-center bg-slate-50 p-2.5 rounded border border-slate-200">
+                    <span class="text-sm font-medium text-slate-700" title="${constraintMatrix[i].name}">R${i + 1}: ${constraintMatrix[i].name}</span>
+                    <div class="flex items-center gap-2">
+                        <span class="text-sm font-bold text-slate-400">${constraintMatrix[i].type}</span>
+                        <input type="number" id="rhs-${i}" value="${val}" class="w-20 border border-slate-300 rounded px-2 py-1 text-slate-800 font-semibold focus:border-blue-500 focus:ring-1 focus:ring-blue-500 outline-none transition-colors">
+                        <span class="text-xs text-slate-400">ton</span>
+                    </div>
+                </div>
+            `).join('');
+            document.getElementById('rhs-inputs').innerHTML = rhsHtml;
+
+            if (window.MathJax) MathJax.typesetPromise();
+        }
+
+        const BIG_M = 100000;
+
+        function runSimplex() {
+            document.getElementById('final-result-container').classList.add('hidden');
+
+            const C = [];
+            for (let i = 0; i < 6; i++) C.push(parseFloat(document.getElementById(`obj-${i}`).value));
+
+            const RHS = [];
+            for (let i = 0; i < 6; i++) RHS.push(parseFloat(document.getElementById(`rhs-${i}`).value));
+
+            let vars = ["Base", "x_1", "x_2", "x_3", "x_4", "x_5", "x_6"];
+            let table = [];
+            let artificialRows = [];
+
+            let slacks = 0, surplus = 0, artificials = 0;
+
+            constraintMatrix.forEach(c => {
+                if (c.type === '<=') slacks++;
+                else if (c.type === '>=') { surplus++; artificials++; }
+            });
+
+            for (let i = 1; i <= slacks; i++) vars.push(`S_${i}`);
+            for (let i = 1; i <= surplus; i++) vars.push(`E_${i}`);
+            for (let i = 1; i <= artificials; i++) vars.push(`A_${i}`);
+            vars.push("RHS");
+
+            let currentS = 0, currentE = 0, currentA = 0;
+
+            constraintMatrix.forEach((c, i) => {
+                let row = new Array(vars.length).fill(0);
+                row[0] = "";
+                c.coeffs.forEach((coef, j) => row[j + 1] = coef);
+
+                if (c.type === '<=') {
+                    row[7 + currentS] = 1;
+                    row[0] = `S_${currentS + 1}`;
+                    currentS++;
+                } else if (c.type === '>=') {
+                    row[7 + slacks + currentE] = -1;
+                    row[7 + slacks + surplus + currentA] = 1;
+                    row[0] = `A_${currentA + 1}`;
+                    artificialRows.push(i);
+                    currentE++;
+                    currentA++;
+                }
+
+                row[vars.length - 1] = RHS[i];
+                table.push(row);
+            });
+
+            let zRow = new Array(vars.length).fill(0);
+            zRow[0] = "Z";
+            C.forEach((coef, j) => zRow[j + 1] = -coef);
+
+            for (let i = 1; i <= artificials; i++) {
+                zRow[7 + slacks + surplus + i - 1] = BIG_M;
+            }
+            table.push(zRow);
+
+            let zIndex = table.length - 1;
+            artificialRows.forEach(rowIndex => {
+                for (let j = 1; j < vars.length; j++) {
+                    table[zIndex][j] -= (BIG_M * table[rowIndex][j]);
+                }
+            });
+
+            let stepsHTML = "";
+            let iteration = 0;
+            const maxIters = 20;
+
+            while (iteration < maxIters) {
+                let currentTable = JSON.parse(JSON.stringify(table));
+
+                let pivotCol = -1;
+                let minZ = 0;
+                for (let j = 1; j < vars.length - 1; j++) {
+                    if (table[zIndex][j] < -0.0001 && table[zIndex][j] < minZ) {
+                        minZ = table[zIndex][j];
+                        pivotCol = j;
+                    }
+                }
+
+                if (pivotCol === -1) {
+                    stepsHTML += renderTableHTML(currentTable, vars, `Iteración Final (Óptima)`, -1, -1);
+                    renderFinalDashboard(currentTable, vars);
+                    break;
+                }
+
+                let pivotRow = -1;
+                let minRatio = Infinity;
+                for (let i = 0; i < zIndex; i++) {
+                    let val = table[i][pivotCol];
+                    if (val > 0.0001) {
+                        let ratio = table[i][vars.length - 1] / val;
+                        if (ratio < minRatio) {
+                            minRatio = ratio;
+                            pivotRow = i;
+                        }
+                    }
+                }
+
+                if (pivotRow === -1) {
+                    stepsHTML += `<div class="p-4 bg-red-100 text-red-700 font-bold rounded">Error: Problema No Acotado.</div>`;
+                    break;
+                }
+
+                stepsHTML += renderTableHTML(currentTable, vars, `Iteración ${iteration}`, pivotRow, pivotCol);
+
+                let pivotVal = table[pivotRow][pivotCol];
+                table[pivotRow][0] = vars[pivotCol];
+
+                for (let j = 1; j < vars.length; j++) {
+                    table[pivotRow][j] /= pivotVal;
+                }
+
+                for (let i = 0; i <= zIndex; i++) {
+                    if (i !== pivotRow) {
+                        let factor = table[i][pivotCol];
+                        for (let j = 1; j < vars.length; j++) {
+                            table[i][j] -= factor * table[pivotRow][j];
+                        }
+                    }
+                }
+                iteration++;
+            }
+
+            document.getElementById('solution-container').innerHTML = stepsHTML;
+            if (window.MathJax) MathJax.typesetPromise();
+        }
+
+        // --- EXTRACCIÓN Y RENDERIZADO DEL DASHBOARD FINAL ---
+        function renderFinalDashboard(finalTable, vars) {
+            let zOpt = Math.round(finalTable[finalTable.length - 1][vars.length - 1] * 100) / 100;
+
+            // Extraer valores de las variables de decisión (x_1 a x_6)
+            let solution = [0, 0, 0, 0, 0, 0];
+            for (let i = 0; i < finalTable.length - 1; i++) {
+                let baseVar = finalTable[i][0];
+                if (baseVar.startsWith("x_")) {
+                    let idx = parseInt(baseVar.split("_")[1]) - 1;
+                    solution[idx] = Math.round(finalTable[i][vars.length - 1] * 100) / 100;
+                }
+            }
+
+            const labels = cases[document.getElementById('preset-selector').value].labels;
+
+            let varsHtml = '';
+            let interpretacion = "Distribución optimizada. ";
+
+            solution.forEach((val, idx) => {
+                let isZero = val === 0;
+                varsHtml += `
+                    <div class="bg-white p-4 rounded-lg border ${isZero ? 'border-slate-200 opacity-60' : 'border-blue-200 shadow-sm ring-1 ring-blue-50'} flex justify-between items-center">
+                        <span class="font-semibold ${isZero ? 'text-slate-400' : 'text-slate-700'}">$x_${idx + 1}$ <span class="text-xs font-normal ml-1">(${labels[idx].split(' ')[1]})</span></span>
+                        <span class="text-xl font-bold ${isZero ? 'text-slate-400' : 'text-blue-600'}">${val} <span class="text-sm font-normal text-slate-500">ton</span></span>
+                    </div>
+                `;
+            });
+
+            if (solution[0] === 0 && solution[1] > 0) {
+                interpretacion += "Se recomienda dedicar la planta de El Alto exclusivamente a la producción de yogur debido a su mayor margen de ganancia bajo capacidad restringida.";
+            }
+
+            let dashboardHtml = `
+                <div class="fade-in bg-gradient-to-br from-green-50 to-emerald-100 p-6 rounded-xl shadow-lg border border-green-200 mb-8">
+                    <div class="flex items-center gap-3 mb-6 border-b border-green-200 pb-4">
+                        <div class="bg-green-500 p-2 rounded-full text-white shadow-md">
+                            <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        </div>
+                        <h2 class="text-2xl font-bold text-green-900">Solución Óptima Encontrada</h2>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                        <div class="md:col-span-1 bg-white p-6 rounded-xl shadow-sm border border-green-100 flex flex-col justify-center items-center text-center">
+                            <span class="text-slate-500 font-semibold mb-2 uppercase tracking-wider text-sm">Ganancia Máxima (Z)</span>
+                            <span class="text-4xl font-extrabold text-green-600">Bs. ${zOpt.toLocaleString()}</span>
+                            <span class="text-xs text-slate-400 mt-2">Mensuales estimados</span>
+                        </div>
+                        <div class="md:col-span-2 grid grid-cols-2 lg:grid-cols-3 gap-3">
+                            ${varsHtml}
+                        </div>
+                    </div>
+
+                    <div class="bg-white/60 p-4 rounded-lg text-green-800 text-sm border border-green-200 flex gap-3 items-start">
+                        <svg class="w-5 h-5 flex-shrink-0 mt-0.5 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <p><strong>Interpretación Gerencial:</strong> ${interpretacion}</p>
+                    </div>
+                </div>
+            `;
+
+            const container = document.getElementById('final-result-container');
+            container.innerHTML = dashboardHtml;
+            container.classList.remove('hidden');
+        }
+
+        // --- RENDERIZADOR UI TABLAS ---
+        function renderTableHTML(matrix, vars, title, pRow, pCol) {
+            let subtitle = "";
+            if (pCol !== -1) {
+                subtitle = `<div class="text-sm mt-1 flex gap-4 text-slate-600">
+                    <span class="bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-medium">Variable Entrante: $${vars[pCol].replace('_', '_')}$</span>
+                    <span class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded font-medium">Variable Saliente: $${matrix[pRow][0].replace('_', '_')}$</span>
+                </div>`;
+            }
+
+            let html = `
+            <div class="fade-in mb-8 overflow-hidden rounded-xl border border-slate-200 shadow-sm bg-white">
+                <div class="bg-slate-50 px-5 py-4 border-b border-slate-200">
+                    <h3 class="font-bold text-lg text-slate-800">${title}</h3>
+                    ${subtitle}
+                </div>
+                <div class="table-container p-4">
+                    <table class="min-w-full text-sm text-center border-collapse">
+                        <thead class="bg-slate-800 text-white shadow-sm">
+                            <tr>${vars.map(v => `<th class="px-4 py-3 font-semibold tracking-wide border-r border-slate-700 last:border-r-0">${formatVar(v)}</th>`).join('')}</tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 border border-slate-200">
+            `;
+
+            matrix.forEach((row, i) => {
+                let isZ = i === matrix.length - 1;
+                let trClass = isZ ? "bg-slate-100 font-bold border-t-4 border-slate-300" : "hover:bg-slate-50 transition-colors";
+                if (i === pRow) trClass += " pivot-row";
+
+                html += `<tr class="${trClass}">`;
+                row.forEach((cell, j) => {
+                    let tdClass = "px-4 py-2.5 border-r border-slate-200 last:border-r-0 whitespace-nowrap text-slate-700";
+                    if (j === pCol) tdClass += " pivot-col";
+                    if (i === pRow && j === pCol) tdClass += " pivot-cell";
+                    if (j === 0) tdClass += " font-bold text-slate-800 bg-slate-100/50";
+
+                    let displayVal = cell;
+                    if (typeof cell === 'number') {
+                        if (isZ && Math.abs(cell) > 10000) {
+                            let mCount = Math.round(cell / BIG_M);
+                            let remainder = Math.round(cell % BIG_M);
+                            if (mCount !== 0) displayVal = `${mCount}M ${remainder > 0 ? '+' + remainder : (remainder < 0 ? remainder : '')}`;
+                            else displayVal = remainder;
+                        } else {
+                            // Mostrar números más amigables (evitar 0.00000000004)
+                            let rounded = Math.round(cell * 1000) / 1000;
+                            displayVal = rounded === 0 ? "0" : rounded;
+                        }
+                    } else if (typeof cell === 'string') {
+                        displayVal = formatVar(cell);
+                    }
+
+                    html += `<td class="${tdClass}">${displayVal}</td>`;
+                });
+                html += `</tr>`;
+            });
+
+            html += `</tbody></table></div></div>`;
+            return html;
+        }
+
+        function formatVar(str) {
+            if (str.includes('_')) return `$${str}$`;
+            return str;
+        }
+
+        window.onload = loadPreset;
+    </script>
+</body>
+
+</html>

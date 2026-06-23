@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculadora Símplex Libre</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        .calc-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+
+        .input-grid {
+            display: flex;
+            gap: 1rem;
+            align-items: flex-end;
+            margin-bottom: 2rem;
+        }
+
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .input-group input, .input-group select {
+            padding: 10px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: 'Inter';
+        }
+
+        .matrix-container {
+            overflow-x: auto;
+            margin-bottom: 2rem;
+        }
+
+        .matrix-table {
+            width: auto;
+            margin: 0 auto;
+        }
+
+        .matrix-table input {
+            width: 70px;
+            padding: 8px;
+            text-align: center;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+
+        .matrix-table select {
+            padding: 8px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+        }
+    </style>
+</head>
+
+<body>
+    <nav class="navbar">
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                <line x1="8" y1="6" x2="16" y2="6"></line>
+                <line x1="16" y1="14" x2="16.01" y2="14"></line>
+                <line x1="12" y1="14" x2="12.01" y2="14"></line>
+                <line x1="8" y1="14" x2="8.01" y2="14"></line>
+            </svg>
+            <span>Calculadora Símplex</span>
+            <span class="tag">Libre</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="index.html">← Volver al Caso PIL Andina</a></li>
+        </ul>
+    </nav>
+
+    <div class="calc-container">
+        <div class="section-title" style="justify-content: flex-start; margin-bottom: 1rem;">
+            Configuración del Modelo
+        </div>
+        
+        <div class="card">
+            <div class="input-grid">
+                <div class="input-group">
+                    <label>Variables de decisión</label>
+                    <input type="number" id="numVars" min="1" max="10" value="2">
+                </div>
+                <div class="input-group">
+                    <label>Restricciones</label>
+                    <input type="number" id="numRest" min="1" max="10" value="3">
+                </div>
+                <div class="input-group">
+                    <label>Objetivo</label>
+                    <select id="tipoObj">
+                        <option value="max">Maximizar</option>
+                        <option value="min">Minimizar</option>
+                    </select>
+                </div>
+                <button id="btnGenerar" class="btn-primary">Generar Cuadrícula</button>
+            </div>
+
+            <div id="matrixSection" style="display: none;">
+                <h3 style="margin-bottom: 1rem; color: var(--text);">Función Objetivo</h3>
+                <div class="matrix-container">
+                    <table class="matrix-table" id="tablaObj"></table>
+                </div>
+
+                <h3 style="margin-bottom: 1rem; color: var(--text);">Restricciones</h3>
+                <div class="matrix-container">
+                    <table class="matrix-table" id="tablaRest"></table>
+                </div>
+
+                <div style="text-align: right;">
+                    <button id="btnResolver" class="btn-primary" style="background: var(--success); border-color: var(--success);">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <polygon points="5 3 19 12 5 21 5 3" />
+                        </svg>
+                        Resolver Problema
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <div id="resultadosSection" style="display: none;">
+            <div class="section-title" style="justify-content: flex-start; margin-bottom: 1rem;">
+                Resultados
+            </div>
+            
+            <div class="controls">
+                <button id="btnReset" class="btn">Reiniciar</button>
+                <button id="btnPrev" class="btn" disabled>Anterior</button>
+                <button id="btnNext" class="btn btn-primary">Siguiente Iteración</button>
+            </div>
+
+            <div class="simplex-output">
+                <div class="info-box">
+                    <h3>Estado y Explicación</h3>
+                    <div id="statusText">Presiona "Siguiente Iteración" para iniciar.</div>
+                </div>
+                <div class="info-box">
+                    <h3>Tabla Símplex</h3>
+                    <div class="table-wrapper">
+                        <table id="simplexTable"></table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="calculadora.js"></script>
+</body>
+
+</html>

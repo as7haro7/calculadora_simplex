@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PIL Andina | Método Símplex</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+
+<body>
+
+    <!-- NAVEGACIÓN -->
+    <nav class="navbar">
+        <div class="logo">
+            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M8 2h8l4 10H4L8 2z" />
+                <path d="M12 12v10" />
+                <path d="M8 22h8" />
+            </svg>
+            <span>PIL Andina</span>
+            <span class="tag">Símplex</span>
+        </div>
+        <ul class="nav-links">
+            <li><a href="#contexto"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M12 16v-4" />
+                        <path d="M12 8h.01" />
+                    </svg> Contexto</a></li>
+            <li><a href="#modelo"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <rect x="3" y="3" width="18" height="18" rx="2" />
+                        <path d="M3 9h18" />
+                        <path d="M9 21V9" />
+                    </svg> Modelo</a></li>
+            <li><a href="#simplex"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <circle cx="12" cy="12" r="3" />
+                        <path
+                            d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+                    </svg> Calculadora</a></li>
+            <li><a href="#solucion"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                        stroke-width="2">
+                        <polyline points="20 6 9 17 4 12" />
+                    </svg> Solución</a></li>
+            <li><a href="#sensibilidad"><svg width="16" height="16" viewBox="0 0 24 24" fill="none"
+                        stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                    </svg> Sensibilidad</a></li>
+            <li><a href="calculadora.html" class="nav-special"><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect>
+                <line x1="8" y1="6" x2="16" y2="6"></line>
+                <line x1="16" y1="14" x2="16.01" y2="14"></line>
+                <line x1="12" y1="14" x2="12.01" y2="14"></line>
+                <line x1="8" y1="14" x2="8.01" y2="14"></line>
+                <line x1="16" y1="10" x2="16.01" y2="10"></line>
+                <line x1="12" y1="10" x2="12.01" y2="10"></line>
+                <line x1="8" y1="10" x2="8.01" y2="10"></line>
+            </svg> Calculadora Libre</a></li>
+        </ul>
+    </nav>
+
+    <!-- HERO -->
+    <header class="hero">
+        <div class="hero-content">
+            <div class="badge">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path
+                        d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                    <line x1="12" y1="9" x2="12" y2="13" />
+                    <line x1="12" y1="17" x2="12.01" y2="17" />
+                </svg>
+                Crisis Económica Bolivia 2025-2026
+            </div>
+            <h1>Optimización con <span class="accent">Método Símplex</span></h1>
+            <p class="subtitle">Resolución interactiva paso a paso del problema de producción de PIL Andina S.A.</p>
+            <div class="stats-hero">
+                <div class="stat">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="2" y="7" width="20" height="14" rx="2" ry="2" />
+                        <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16" />
+                    </svg>
+                    <span class="num">25%</span>
+                    <span class="lbl">Cap. El Alto</span>
+                </div>
+                <div class="stat">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="1" x2="12" y2="23" />
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                    </svg>
+                    <span class="num">13.22%</span>
+                    <span class="lbl">Inflación</span>
+                </div>
+                <div class="stat">
+                    <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                        <polyline points="17 6 23 6 23 12" />
+                    </svg>
+                    <span class="num">+351K</span>
+                    <span class="lbl">Bs recuperados</span>
+                </div>
+            </div>
+            <div class="action-group" style="display: flex; gap: 1rem; align-items: center; margin-top: 1.5rem;">
+                <a href="#simplex" class="btn-primary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polygon points="5 3 19 12 5 21 5 3" />
+                    </svg>
+                    Resolver paso a paso
+                </a>
+                <div class="scenario-selector" style="display: flex; flex-direction: column; gap: 0.2rem;">
+                    <label for="selEscenario" style="font-size: 0.8rem; font-weight: 600; color: var(--text-light);">Escenario de Análisis:</label>
+                    <select id="selEscenario" class="form-select" style="padding: 10px; border-radius: 6px; border: 1px solid var(--border); font-family: 'Inter'; font-weight: 500; cursor: pointer; background: var(--bg-alt);">
+                        <option value="actual">Crisis Actual (Mayo 2026)</option>
+                        <option value="recuperacion">Recuperación (El Alto al 70%)</option>
+                        <option value="peor">Peor Escenario (Bloqueo Total)</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+        <div class="hero-visual">
+            <div class="floating-card">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                </svg>
+                Max Z = 1.971.000 Bs
+            </div>
+            <div class="floating-card delay">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                </svg>
+                6 variables · 7 restricciones
+            </div>
+        </div>
+    </header>
+
+    <!-- CONTEXTO -->
+    <section id="contexto" class="section">
+        <h2 class="section-title">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="10" />
+                <path d="M12 16v-4" />
+                <path d="M12 8h.01" />
+            </svg>
+            Contexto Situacional
+        </h2>
+        <div class="grid-2">
+            <div class="card crisis-card">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z" />
+                        <line x1="12" y1="9" x2="12" y2="13" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    Crisis en Bolivia
+                </h3>
+                <ul>
+                    <li>Producción de gas cayó de <b>59.6M</b> a <b>27.3M</b> m³/día</li>
+                    <li>Exportaciones hidrocarburíferas <b>-78%</b></li>
+                    <li>Inflación interanual: <b>13.22%</b></li>
+                    <li>Diésel: 3.72 → <b>9.80 Bs/litro</b></li>
+                    <li>Crecimiento proyectado 2026: <b>0.5%</b></li>
+                </ul>
+            </div>
+            <div class="card pil-card">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M8 2h8l4 10H4L8 2z" />
+                        <path d="M12 12v10" />
+                        <path d="M8 22h8" />
+                    </svg>
+                    Impacto en PIL Andina
+                </h3>
+                <ul>
+                    <li>77% del acopio nacional de leche</li>
+                    <li>Planta El Alto operando al <b>25%</b> por bloqueos</li>
+                    <li>Pérdidas: <b>16 millones Bs</b> en mayo 2026</li>
+                    <li>Impacto anual por regulación: <b>+90M Bs</b></li>
+                    <li>3 plantas: El Alto, Cochabamba, Santa Cruz</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- MODELO -->
+    <section id="modelo" class="section">
+        <h2 class="section-title">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="3" y="3" width="18" height="18" rx="2" />
+                <path d="M3 9h18" />
+                <path d="M9 21V9" />
+            </svg>
+            Formulación del Modelo
+        </h2>
+
+        <div class="card">
+            <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="4 17 10 11 4 5" />
+                    <line x1="12" y1="19" x2="20" y2="19" />
+                </svg>
+                Variables de Decisión
+            </h3>
+            <div class="variables-grid">
+                <div class="var-item"><b>x₁</b> Leche fluida · El Alto</div>
+                <div class="var-item"><b>x₂</b> Yogur · El Alto</div>
+                <div class="var-item"><b>x₃</b> Leche fluida · Cochabamba</div>
+                <div class="var-item"><b>x₄</b> Yogur · Cochabamba</div>
+                <div class="var-item"><b>x₅</b> Leche fluida · Santa Cruz</div>
+                <div class="var-item"><b>x₆</b> Yogur · Santa Cruz</div>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <path d="M16 8l-8 8" />
+                    <path d="M8 8l8 8" />
+                </svg>
+                Función Objetivo
+            </h3>
+            <div class="formula">
+                Max Z = 850x₁ + 1200x₂ + 920x₃ + 1350x₄ + 880x₅ + 1280x₆
+            </div>
+            <p class="note">Ganancias en Bs/tonelada según planta (datos coyuntura 2026)</p>
+        </div>
+
+        <div class="card">
+            <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                    <line x1="16" y1="13" x2="8" y2="13" />
+                    <line x1="16" y1="17" x2="8" y2="17" />
+                    <polyline points="10 9 9 9 8 9" />
+                </svg>
+                Restricciones
+            </h3>
+            <div class="constraints">
+                <div class="constraint"><span class="tag-constraint">R1</span> x₁ + x₂ ≤ 400 <small class="tooltip-container" data-tooltip="Máxima cantidad de leche que puede procesar El Alto al día">(Cap. El Alto
+                        crisis)</small></div>
+                <div class="constraint"><span class="tag-constraint">R2</span> x₃ + x₄ ≤ 1000 <small class="tooltip-container" data-tooltip="Máxima capacidad de la planta en Cochabamba">(Cap.
+                        Cochabamba)</small></div>
+                <div class="constraint"><span class="tag-constraint">R3</span> x₅ + x₆ ≤ 600 <small class="tooltip-container" data-tooltip="Máxima capacidad de la planta en Santa Cruz">(Cap. Santa
+                        Cruz)</small></div>
+                <div class="constraint"><span class="tag-constraint">R4</span> x₁ + x₃ + x₅ ≤ 1500 <small class="tooltip-container" data-tooltip="Límite total de acopio de leche cruda a nivel nacional">(Leche cruda
+                        disponible)</small></div>
+                <div class="constraint"><span class="tag-constraint">R5</span> x₁ + x₃ + x₅ ≥ 900 <small class="tooltip-container" data-tooltip="Requisito mínimo de producción para abastecer el mercado">(Demanda mínima
+                        leche)</small></div>
+                <div class="constraint"><span class="tag-constraint">R6</span> x₂ + x₄ + x₆ ≥ 400 <small class="tooltip-container" data-tooltip="Requisito mínimo de producción de yogur a nivel nacional">(Demanda mínima
+                        yogur)</small></div>
+                <div class="constraint"><span class="tag-constraint">R7</span> xᵢ ≥ 0 <small class="tooltip-container" data-tooltip="No se pueden producir cantidades negativas">(No negatividad)</small>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- CALCULADORA SÍMPLEX -->
+    <section id="simplex" class="section">
+        <h2 class="section-title">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="3" />
+                <path
+                    d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z" />
+            </svg>
+            Calculadora Símplex Paso a Paso
+        </h2>
+
+        <div class="controls">
+            <button id="btnReset" class="btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="1 4 1 10 7 10" />
+                    <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                </svg>
+                Reiniciar
+            </button>
+            <button id="btnPrev" class="btn" disabled>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="15 18 9 12 15 6" />
+                </svg>
+                Anterior
+            </button>
+            <button id="btnNext" class="btn btn-primary">
+                Siguiente Iteración
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="9 18 15 12 9 6" />
+                </svg>
+            </button>
+            <button id="btnAuto" class="btn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polygon points="5 3 19 12 5 21 5 3" />
+                </svg>
+                Auto-play
+            </button>
+            <div class="iteration-counter">
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="12" cy="12" r="10" />
+                    <polyline points="12 6 12 12 16 14" />
+                </svg>
+                Iteración: <span id="iterCount">0</span> / <span id="iterTotal">?</span>
+            </div>
+        </div>
+
+        <div id="simplexOutput" class="simplex-output">
+            <div class="info-box">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <line x1="12" y1="16" x2="12" y2="12" />
+                        <line x1="12" y1="8" x2="12.01" y2="8" />
+                    </svg>
+                    Estado Actual
+                </h3>
+                <div id="statusText">Presiona "Siguiente Iteración" para comenzar el algoritmo Símplex con el método de
+                    la Gran M.</div>
+            </div>
+
+            <div class="info-box">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M16 8l-8 8" />
+                        <path d="M8 8l8 8" />
+                    </svg>
+                    Variable Entrante y Saliente
+                </h3>
+                <div id="pivotInfo">-</div>
+            </div>
+
+            <div class="info-box">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                    </svg>
+                    Tabla del Símplex
+                </h3>
+                <div class="table-wrapper">
+                    <table id="simplexTable"></table>
+                </div>
+            </div>
+
+            <div class="info-box">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <circle cx="12" cy="12" r="10" />
+                        <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                        <line x1="12" y1="17" x2="12.01" y2="17" />
+                    </svg>
+                    Explicación del Paso
+                </h3>
+                <div id="explanation">-</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SOLUCIÓN -->
+    <section id="solucion" class="section">
+        <h2 class="section-title">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="20 6 9 17 4 12" />
+            </svg>
+            Solución Óptima
+        </h2>
+
+        <div class="solution-grid">
+            <div class="card solution-card">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="1" x2="12" y2="23" />
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                    </svg>
+                    Ganancia Máxima
+                </h3>
+                <div class="big-number">1.971.000 <small>Bs/mes</small></div>
+                <p>Producción total: <b>1.900 ton/mes</b></p>
+            </div>
+            <div class="card chart-card">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21.21 15.89A10 10 0 1 1 8 2.83" />
+                        <path d="M22 12A10 10 0 0 0 12 2v10z" />
+                    </svg>
+                    Distribución por Planta
+                </h3>
+                <canvas id="chartPlantas"></canvas>
+            </div>
+            <div class="card chart-card">
+                <h3>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="20" x2="18" y2="10" />
+                        <line x1="12" y1="20" x2="12" y2="4" />
+                        <line x1="6" y1="20" x2="6" y2="14" />
+                    </svg>
+                    Leche vs Yogur
+                </h3>
+                <canvas id="chartProductos"></canvas>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+                    <polyline points="14 2 14 8 20 8" />
+                </svg>
+                Plan de Producción Óptimo
+            </h3>
+            <table class="solution-table">
+                <thead>
+                    <tr>
+                        <th>Variable</th>
+                        <th>Producto</th>
+                        <th>Planta</th>
+                        <th>Toneladas</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>x₁</td>
+                        <td>Leche fluida</td>
+                        <td>El Alto</td>
+                        <td>0</td>
+                        <td class="status-off">No producir</td>
+                    </tr>
+                    <tr>
+                        <td>x₂</td>
+                        <td>Yogur</td>
+                        <td>El Alto</td>
+                        <td>400</td>
+                        <td class="status-on">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            Máxima capacidad
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>x₃</td>
+                        <td>Leche fluida</td>
+                        <td>Cochabamba</td>
+                        <td>900</td>
+                        <td class="status-on">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            Estratégico
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>x₄</td>
+                        <td>Yogur</td>
+                        <td>Cochabamba</td>
+                        <td>100</td>
+                        <td class="status-on">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            Complementario
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>x₅</td>
+                        <td>Leche fluida</td>
+                        <td>Santa Cruz</td>
+                        <td>600</td>
+                        <td class="status-on">
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor"
+                                stroke-width="2">
+                                <polyline points="20 6 9 17 4 12" />
+                            </svg>
+                            Plena capacidad
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>x₆</td>
+                        <td>Yogur</td>
+                        <td>Santa Cruz</td>
+                        <td>0</td>
+                        <td class="status-off">No producir</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="card comparison-card">
+            <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="23 6 13.5 15.5 8.5 10.5 1 18" />
+                    <polyline points="17 6 23 6 23 12" />
+                </svg>
+                Impacto de la Optimización
+            </h3>
+            <div class="comparison-grid">
+                <div class="comp-item">
+                    <div class="comp-label">Sin optimizar</div>
+                    <div class="comp-value">1.620.000 Bs</div>
+                </div>
+                <div class="comp-item highlight">
+                    <div class="comp-label">Con Símplex</div>
+                    <div class="comp-value">1.971.000 Bs</div>
+                </div>
+                <div class="comp-item gain">
+                    <div class="comp-label">Ganancia adicional</div>
+                    <div class="comp-value">+351.000 Bs (+21.7%)</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- SENSIBILIDAD -->
+    <section id="sensibilidad" class="section">
+        <h2 class="section-title">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <line x1="18" y1="20" x2="18" y2="10" />
+                <line x1="12" y1="20" x2="12" y2="4" />
+                <line x1="6" y1="20" x2="6" y2="14" />
+            </svg>
+            Análisis de Sensibilidad Interactivo
+        </h2>
+        <p class="section-sub">Modifica los parámetros y observa cómo cambia la solución óptima</p>
+
+        <div class="card">
+            <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <line x1="4" y1="21" x2="4" y2="14" />
+                    <line x1="4" y1="10" x2="4" y2="3" />
+                    <line x1="12" y1="21" x2="12" y2="12" />
+                    <line x1="12" y1="8" x2="12" y2="3" />
+                    <line x1="20" y1="21" x2="20" y2="16" />
+                    <line x1="20" y1="12" x2="20" y2="3" />
+                    <line x1="1" y1="14" x2="7" y2="14" />
+                    <line x1="9" y1="8" x2="15" y2="8" />
+                    <line x1="17" y1="16" x2="23" y2="16" />
+                </svg>
+                Precios Sombra (Valor marginal por tonelada adicional)
+            </h3>
+            <div class="sensitivity-grid">
+                <div class="sens-item">
+                    <label>Capacidad El Alto: <span id="vElAlto">400</span> ton</label>
+                    <input type="range" id="rElAlto" min="300" max="500" value="400">
+                    <small>Precio sombra: <b>350 Bs/ton</b> · Rango válido [300, 500]</small>
+                </div>
+                <div class="sens-item">
+                    <label>Capacidad Cochabamba: <span id="vCbba">1000</span> ton</label>
+                    <input type="range" id="rCbba" min="900" max="1100" value="1000">
+                    <small>Precio sombra: <b>920 Bs/ton</b> · Rango válido [900, 1100]</small>
+                </div>
+                <div class="sens-item">
+                    <label>Capacidad Santa Cruz: <span id="vScz">600</span> ton</label>
+                    <input type="range" id="rScz" min="500" max="700" value="600">
+                    <small>Precio sombra: <b>880 Bs/ton</b> · Rango válido [500, 700]</small>
+                </div>
+                <div class="sens-item">
+                    <label>Demanda mínima leche: <span id="vDem">900</span> ton</label>
+                    <input type="range" id="rDem" min="800" max="1000" value="900">
+                    <small>Precio sombra: <b>-70 Bs/ton</b> · Rango válido [800, 1000]</small>
+                </div>
+            </div>
+            <div class="sens-result">
+                <h4>Ganancia estimada con nuevos parámetros:</h4>
+                <div class="big-number" id="sensGanancia">1.971.000 Bs</div>
+                <p id="sensInterpretacion">La Planta Cochabamba es el activo más valioso: cada tonelada extra genera 920
+                    Bs.</p>
+            </div>
+        </div>
+
+        <div class="card">
+            <h3>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <polyline points="22 12 18 12 15 21 9 3 6 12 2 12" />
+                </svg>
+                Rango de Coeficientes (Objetivo)
+            </h3>
+            <table class="solution-table">
+                <thead>
+                    <tr>
+                        <th>Variable</th>
+                        <th>Coef. actual</th>
+                        <th>Rango inferior</th>
+                        <th>Rango superior</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>x₂ (Yogur El Alto)</td>
+                        <td>1200</td>
+                        <td>1050</td>
+                        <td>∞</td>
+                    </tr>
+                    <tr>
+                        <td>x₃ (Leche Cbba)</td>
+                        <td>920</td>
+                        <td>800</td>
+                        <td>1100</td>
+                    </tr>
+                    <tr>
+                        <td>x₄ (Yogur Cbba)</td>
+                        <td>1350</td>
+                        <td>920</td>
+                        <td>∞</td>
+                    </tr>
+                    <tr>
+                        <td>x₅ (Leche Sta. Cruz)</td>
+                        <td>880</td>
+                        <td>700</td>
+                        <td>1050</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <!-- RECOMENDACIONES -->
+    <section class="section">
+        <h2 class="section-title">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                <circle cx="12" cy="12" r="3" />
+            </svg>
+            Recomendaciones Gerenciales
+        </h2>
+        <div class="grid-2">
+            <div class="card rec-card">
+                <div class="rec-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <polyline points="1 4 1 10 7 10" />
+                        <path d="M3.51 15a9 9 0 1 0 2.13-9.36L1 10" />
+                    </svg>
+                </div>
+                <h3>1. Reconversión El Alto</h3>
+                <p>Dedicar la planta al 25% exclusivamente a <b>yogur</b> (mayor margen, no requiere distribución
+                    masiva).</p>
+            </div>
+            <div class="card rec-card">
+                <div class="rec-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <rect x="1" y="3" width="15" height="13" />
+                        <polygon points="16 8 20 8 23 11 23 16 16 16 16 8" />
+                        <circle cx="5.5" cy="18.5" r="2.5" />
+                        <circle cx="18.5" cy="18.5" r="2.5" />
+                    </svg>
+                </div>
+                <h3>2. Cochabamba Estratégica</h3>
+                <p>Abastecer La Paz desde Cochabamba (900 ton leche fluida) evitando rutas bloqueadas.</p>
+            </div>
+            <div class="card rec-card">
+                <div class="rec-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path
+                            d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                        <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                        <line x1="12" y1="22.08" x2="12" y2="12" />
+                    </svg>
+                </div>
+                <h3>3. Santa Cruz al 100%</h3>
+                <p>Operar a plena capacidad (600 ton) para abastecer el oriente boliviano.</p>
+            </div>
+            <div class="card rec-card">
+                <div class="rec-icon">
+                    <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="12" y1="1" x2="12" y2="23" />
+                        <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6" />
+                    </svg>
+                </div>
+                <h3>4. Inversión Priorizada</h3>
+                <p>Ampliar Cochabamba: cada tonelada extra = <b>920 Bs</b> de ganancia marginal.</p>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <p>
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M22 10v6M2 10l10-5 10 5-10 5z" />
+                <path d="M6 12v5c3 3 9 3 12 0v-5" />
+            </svg>
+            Universidad Mayor de San Andrés · Carrera de Informática · Investigación Operativa
+        </p>
+        <p>Aplicación educativa del Método Símplex · Junio 2026</p>
+    </footer>
+
+    <script src="simplex.js"></script>
+</body>
+
+</html>
